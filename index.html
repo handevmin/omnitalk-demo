@@ -390,14 +390,23 @@
     .toast svg { width: 17px; height: 17px; color: #4ade80; }
 
     /* KPI upgrade */
-    .kpi { position: relative; overflow: hidden; transition: box-shadow .2s, transform .2s; }
-    .kpi::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent, var(--brand)); opacity: .9; }
-    .kpi:hover { box-shadow: var(--sh); transform: translateY(-2px); }
+    .kpi { position: relative; overflow: hidden; transition: box-shadow .2s, transform .2s, border-color .2s; }
+    .kpi:hover { box-shadow: var(--sh); transform: translateY(-2px); border-color: #dfe2ec; }
+    .kpi-ic { background: #f4f5fa !important; }
     .kpi-value-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; }
     .kpi-spark { flex: 0 0 auto; }
     .kpi-foot { margin-top: 13px; padding-top: 11px; border-top: 1px solid var(--line-2); font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
     .kpi-foot b { color: var(--ink-2); font-weight: 700; }
     .kpi-delta.good { color: var(--green); background: var(--green-bg); }
+    /* leads summary cards */
+    .stat-cap { font-size: 12px; color: var(--muted); margin-top: 7px; display: flex; align-items: center; gap: 6px; }
+    .stat-cap i { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+
+    /* AI regenerate loading */
+    .ai-loading { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--brand-700); font-weight: 600; padding: 5px 0 2px; }
+    .spinner { width: 15px; height: 15px; border: 2px solid var(--brand-100); border-top-color: var(--brand-600); border-radius: 50%; animation: spin .7s linear infinite; flex: 0 0 auto; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .panel-quick button { white-space: nowrap; }
 
     /* Modal */
     .overlay { position: fixed; inset: 0; background: rgba(15,18,34,.45); backdrop-filter: blur(2px); display: none; align-items: center; justify-content: center; z-index: 80; padding: 20px; }
@@ -682,10 +691,26 @@
           </div>
 
           <div class="grid kpis" style="margin-bottom:16px">
-            <div class="card kpi"><div class="kpi-label" style="margin-top:0">결제 임박 (80점+)</div><div class="kpi-value" style="color:#d92d20">9</div></div>
-            <div class="card kpi"><div class="kpi-label" style="margin-top:0">관심 고객 (60–79점)</div><div class="kpi-value" style="color:#b54708">22</div></div>
-            <div class="card kpi"><div class="kpi-label" style="margin-top:0">검토 중 (40–59점)</div><div class="kpi-value" style="color:var(--blue)">38</div></div>
-            <div class="card kpi"><div class="kpi-label" style="margin-top:0">예상 매출 (이번 주)</div><div class="kpi-value">₩4.7천만</div></div>
+            <div class="card kpi">
+              <div class="kpi-label" style="margin-top:0">결제 임박</div>
+              <div class="kpi-value" style="color:#d92d20">9</div>
+              <div class="stat-cap"><i style="background:#d92d20"></i>80점 이상 · 전체의 13%</div>
+            </div>
+            <div class="card kpi">
+              <div class="kpi-label" style="margin-top:0">관심 고객</div>
+              <div class="kpi-value" style="color:#b54708">22</div>
+              <div class="stat-cap"><i style="background:#f79009"></i>60–79점 · 오늘 신규 +6</div>
+            </div>
+            <div class="card kpi">
+              <div class="kpi-label" style="margin-top:0">검토 중</div>
+              <div class="kpi-value" style="color:var(--blue)">38</div>
+              <div class="stat-cap"><i style="background:var(--blue)"></i>40–59점 · 팔로업 권장</div>
+            </div>
+            <div class="card kpi">
+              <div class="kpi-label" style="margin-top:0">예상 매출 (이번 주)</div>
+              <div class="kpi-value">₩4.7천만</div>
+              <div class="stat-cap"><i style="background:var(--green)"></i>결제 임박 9건 기준</div>
+            </div>
           </div>
 
           <div class="card">
@@ -1063,12 +1088,14 @@
         ? `<div class="ai-suggest" style="background:#f0fdfa;border-color:#99f6e4"><div class="lab" style="color:#0f766e"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 6 9 17l-5-5"/></svg>상담사 응대 모드</div><p>${c.suggest}</p></div>`
         : `<div class="ai-suggest">
             <div class="lab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.5 3 11 7l4 1.5L11 10l-1.5 4L8 10l-4-1.5L8 7zM18 13l.9 2.3L21 16l-2.1.7L18 19l-.9-2.3L15 16l2.1-.7z"/></svg>AI 추천 답변</div>
-            <p>${c._curSuggest || c.suggest}</p>
+            ${_regenLoading
+              ? `<div class="ai-loading"><span class="spinner"></span>AI가 답변을 새로 작성하고 있어요…</div>`
+              : `<p>${c._curSuggest || c.suggest}</p>
             <div class="row">
               <button class="mini-btn fill" onclick="sendAISuggest()">전송</button>
               <button class="mini-btn line" onclick="editSuggest()">수정 후 전송</button>
               <button class="mini-btn line" onclick="regenSuggest()">다시 생성</button>
-            </div>
+            </div>`}
           </div>`;
 
       document.getElementById('chatDetail').innerHTML = `
@@ -1124,6 +1151,7 @@
       toast('추천 답변을 입력창으로 불러왔어요 · 수정 후 전송하세요');
     }
     const _sugIdx = {};
+    let _regenLoading = false;
     function suggestVariants(c){
       const base = c.suggest;
       const first = base.split(/(?<=[.!?~])\s/)[0] || base;
@@ -1134,10 +1162,26 @@
       ];
     }
     function regenSuggest(){
+      const c = curConv(); if(!c || _regenLoading) return;
+      _regenLoading = true;
+      renderChat(c);                       // 로딩 스피너 표시
+      setTimeout(()=>{
+        _sugIdx[c.id] = ((_sugIdx[c.id]||0)+1) % 3;
+        c._curSuggest = suggestVariants(c)[_sugIdx[c.id]];
+        _regenLoading = false;
+        renderChat(c);
+        toast('새 추천 답변을 생성했어요');
+      }, 900);
+    }
+    function returnToAI(){
       const c = curConv(); if(!c) return;
-      _sugIdx[c.id] = ((_sugIdx[c.id]||0)+1) % 3;
-      c._curSuggest = suggestVariants(c)[_sugIdx[c.id]];
-      renderChat(c); toast('새 추천 답변을 생성했어요');
+      c.staff = false; c.ai = true;
+      c._curSuggest = '고객님, 이어서 제가 도와드릴게요! 필요하신 정보를 말씀해 주시면 바로 안내해 드릴게요 😊';
+      _sugIdx[c.id] = 0;
+      c.msgs.push({s:'sys', t:'AI 자동응대로 다시 전환되었습니다', tm:'방금'});
+      c.last = 'AI 자동응대로 전환됨';
+      renderConvList(); renderChat(c); renderPanel(c);
+      toast('AI 자동응대로 전환했어요');
     }
     function handoff(){
       const c = curConv(); if(!c) return;
@@ -1180,7 +1224,9 @@
           <div class="panel-sub">${ch.label} · ${c.lang}</div>
           <div class="panel-quick">
             <button class="btn btn-ghost" style="flex:1;justify-content:center;padding:8px" onclick="openProfile()">프로필</button>
-            <button class="btn btn-primary" style="flex:1;justify-content:center;padding:8px" onclick="handoff()">${c.staff?'상담사 응대중':'상담사 이관'}</button>
+            ${c.staff
+              ? `<button class="btn btn-ghost" style="flex:1;justify-content:center;padding:8px;color:var(--brand-700);border-color:var(--brand-100);background:var(--brand-50)" onclick="returnToAI()">AI 응대로 전환</button>`
+              : `<button class="btn btn-primary" style="flex:1;justify-content:center;padding:8px" onclick="handoff()">상담사 이관</button>`}
           </div>
         </div>
         <div class="panel-sec">
