@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OmniTalk · AI 멀티채널 상담 자동화</title>
+  <meta name="description" content="카카오톡 · 네이버 톡톡 · 스마트스토어 · 잘로 · 인스타그램까지. 다국어 AI가 응대하고 결제 의향 고객만 선별해 드립니다." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" as="style" crossorigin
+    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --brand: #6366f1;
+      --brand-600: #5145e5;
+      --brand-700: #4338ca;
+      --brand-50: #eef0ff;
+      --brand-100: #e0e3ff;
+
+      --ink: #0f1222;
+      --ink-2: #2b2f44;
+      --muted: #6b7280;
+      --muted-2: #9aa1ad;
+      --line: #ebedf3;
+      --line-2: #f2f3f8;
+      --bg: #f5f6fb;
+      --card: #ffffff;
+
+      --green: #12b76a;
+      --green-bg: #e7f8ef;
+      --amber: #f79009;
+      --amber-bg: #fef4e6;
+      --red: #f04438;
+      --red-bg: #fdecec;
+      --blue: #2e90fa;
+      --blue-bg: #e8f3ff;
+
+      --kakao: #fee500;
+      --naver: #03c75a;
+      --zalo: #0068ff;
+      --insta: #e1306c;
+
+      --r-sm: 8px;
+      --r: 12px;
+      --r-lg: 16px;
+      --r-xl: 22px;
+
+      --sh-sm: 0 1px 2px rgba(16, 18, 34, .05);
+      --sh: 0 4px 16px rgba(16, 18, 34, .06);
+      --sh-lg: 0 18px 48px rgba(16, 18, 34, .12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body { height: 100%; }
+
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      letter-spacing: -.01em;
+    }
+
+    ::-webkit-scrollbar { width: 9px; height: 9px; }
+    ::-webkit-scrollbar-thumb { background: #d8dbe4; border-radius: 20px; border: 2px solid transparent; background-clip: padding-box; }
+    ::-webkit-scrollbar-thumb:hover { background: #c2c6d2; background-clip: padding-box; }
+
+    button { font-family: inherit; cursor: pointer; border: none; background: none; }
+    a { color: inherit; text-decoration: none; }
+
+    /* ---------- Layout ---------- */
+    .app { display: grid; grid-template-columns: 248px 1fr; min-height: 100vh; }
+
+    .sidebar {
+      background: var(--card);
+      border-right: 1px solid var(--line);
+      padding: 20px 14px;
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .brand { display: flex; align-items: center; gap: 11px; padding: 6px 8px 18px; }
+    .brand-mark {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: linear-gradient(135deg, #7c83ff, #5145e5 70%);
+      display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 18px;
+      box-shadow: 0 6px 16px rgba(81, 69, 229, .35);
+    }
+    .brand-name { font-weight: 800; font-size: 17px; letter-spacing: -.02em; }
+    .brand-sub { font-size: 11px; color: var(--muted-2); font-weight: 500; margin-top: 1px; }
+
+    .nav-group { margin-top: 8px; }
+    .nav-label { font-size: 11px; font-weight: 700; color: var(--muted-2); text-transform: uppercase; letter-spacing: .06em; padding: 14px 12px 6px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 11px;
+      padding: 9px 12px; border-radius: 10px; color: var(--ink-2);
+      font-weight: 500; font-size: 14px; margin-bottom: 2px;
+      transition: background .15s, color .15s;
+    }
+    .nav-item svg { width: 19px; height: 19px; stroke-width: 1.9; flex: 0 0 auto; color: var(--muted); transition: color .15s; }
+    .nav-item:hover { background: var(--line-2); }
+    .nav-item.active { background: var(--brand-50); color: var(--brand-700); font-weight: 700; }
+    .nav-item.active svg { color: var(--brand-600); }
+    .nav-badge { margin-left: auto; background: var(--brand); color: #fff; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 20px; }
+    .nav-item.active .nav-badge { background: var(--brand-600); }
+
+    .side-foot { margin-top: auto; }
+    .plan-card {
+      background: linear-gradient(150deg, #1c1f33, #2d2350);
+      color: #fff; border-radius: var(--r); padding: 15px; position: relative; overflow: hidden;
+    }
+    .plan-card::after { content: ""; position: absolute; right: -30px; top: -30px; width: 100px; height: 100px; background: radial-gradient(circle, rgba(124,131,255,.5), transparent 70%); }
+    .plan-card h4 { font-size: 13px; font-weight: 700; }
+    .plan-card p { font-size: 12px; color: #c7c9e0; margin: 4px 0 11px; line-height: 1.45; }
+    .plan-card button { width: 100%; background: #fff; color: var(--ink); font-weight: 700; font-size: 13px; padding: 8px; border-radius: 8px; }
+
+    /* ---------- Main ---------- */
+    .main { display: flex; flex-direction: column; min-width: 0; }
+
+    .topbar {
+      height: 64px; background: rgba(255,255,255,.86); backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line); display: flex; align-items: center;
+      gap: 14px; padding: 0 26px; position: sticky; top: 0; z-index: 30;
+    }
+    .topbar .ws { display: flex; align-items: center; gap: 9px; padding: 6px 12px 6px 8px; border: 1px solid var(--line); border-radius: 10px; font-weight: 600; font-size: 13px; }
+    .ws-logo { width: 26px; height: 26px; border-radius: 7px; background: linear-gradient(135deg,#22c55e,#0ea5e9); display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 13px; }
+    .ws .chev { color: var(--muted-2); }
+
+    .search {
+      flex: 1; max-width: 420px; display: flex; align-items: center; gap: 9px;
+      background: var(--line-2); border: 1px solid transparent; border-radius: 10px; padding: 9px 13px; color: var(--muted);
+    }
+    .search:focus-within { background: #fff; border-color: var(--brand-100); }
+    .search input { border: none; background: none; outline: none; flex: 1; font-size: 13.5px; color: var(--ink); }
+    .search svg { width: 17px; height: 17px; }
+    .search kbd { font-size: 11px; color: var(--muted-2); background: #fff; border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; font-family: inherit; }
+
+    .top-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+    .icon-btn { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; color: var(--muted); position: relative; }
+    .icon-btn:hover { background: var(--line-2); color: var(--ink); }
+    .icon-btn svg { width: 19px; height: 19px; }
+    .dot-badge { position: absolute; top: 8px; right: 9px; width: 7px; height: 7px; background: var(--red); border-radius: 50%; border: 1.5px solid #fff; }
+    .avatar { width: 38px; height: 38px; border-radius: 11px; background: linear-gradient(135deg,#f59e0b,#ef4444); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 14px; }
+
+    .content { padding: 26px; flex: 1; min-width: 0; }
+    .view { display: none; animation: fade .25s ease; }
+    .view.active { display: block; }
+    @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+    .page-head { display: flex; align-items: flex-end; gap: 16px; margin-bottom: 22px; flex-wrap: wrap; }
+    .page-head h1 { font-size: 23px; font-weight: 800; letter-spacing: -.02em; }
+    .page-head p { color: var(--muted); margin-top: 4px; font-size: 13.5px; }
+    .page-head .ph-actions { margin-left: auto; display: flex; gap: 9px; }
+
+    .btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 15px; border-radius: 10px; font-weight: 600; font-size: 13.5px; transition: .15s; }
+    .btn svg { width: 16px; height: 16px; }
+    .btn-primary { background: var(--brand-600); color: #fff; box-shadow: 0 6px 16px rgba(81,69,229,.28); }
+    .btn-primary:hover { background: var(--brand-700); }
+    .btn-ghost { background: #fff; color: var(--ink-2); border: 1px solid var(--line); }
+    .btn-ghost:hover { background: var(--line-2); }
+
+    /* ---------- Cards / KPI ---------- */
+    .grid { display: grid; gap: 16px; }
+    .kpis { grid-template-columns: repeat(4, 1fr); }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--sh-sm); }
+    .kpi { padding: 18px; }
+    .kpi-top { display: flex; align-items: center; justify-content: space-between; }
+    .kpi-ic { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; }
+    .kpi-ic svg { width: 21px; height: 21px; }
+    .kpi-label { color: var(--muted); font-size: 13px; font-weight: 500; margin: 14px 0 3px; }
+    .kpi-value { font-size: 27px; font-weight: 800; letter-spacing: -.03em; }
+    .kpi-delta { display: inline-flex; align-items: center; gap: 3px; font-size: 12.5px; font-weight: 700; margin-top: 7px; padding: 2px 7px; border-radius: 20px; }
+    .kpi-delta.up { color: var(--green); background: var(--green-bg); }
+    .kpi-delta.down { color: var(--red); background: var(--red-bg); }
+    .kpi-delta svg { width: 13px; height: 13px; }
+
+    .section-grid { grid-template-columns: 1.6fr 1fr; align-items: start; }
+    .card-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 6px; }
+    .card-head h3 { font-size: 15.5px; font-weight: 700; }
+    .card-head .sub { color: var(--muted); font-size: 12.5px; }
+    .card-link { color: var(--brand-600); font-weight: 600; font-size: 13px; }
+    .card-body { padding: 14px 20px 20px; }
+
+    .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); }
+    .legend i { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
+
+    /* channel rows */
+    .chrow { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line-2); }
+    .chrow:last-child { border-bottom: none; }
+    .ch-ic { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; font-weight: 800; font-size: 13px; flex: 0 0 auto; }
+    .ch-name { font-weight: 600; font-size: 13.5px; }
+    .ch-meta { font-size: 12px; color: var(--muted); }
+    .ch-bar { flex: 1; height: 7px; background: var(--line-2); border-radius: 20px; overflow: hidden; }
+    .ch-bar > i { display: block; height: 100%; border-radius: 20px; }
+    .ch-val { font-weight: 700; font-size: 13px; width: 38px; text-align: right; }
+
+    /* funnel */
+    .funnel { display: flex; flex-direction: column; gap: 10px; }
+    .fn { }
+    .fn-top { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; }
+    .fn-top b { font-weight: 700; }
+    .fn-top span { color: var(--muted); }
+    .fn-track { height: 28px; background: var(--line-2); border-radius: 8px; overflow: hidden; }
+    .fn-fill { height: 100%; border-radius: 8px; display: flex; align-items: center; padding-left: 11px; color: #fff; font-weight: 700; font-size: 12.5px; }
+
+    /* badges */
+    .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 20px; font-size: 11.5px; font-weight: 700; }
+    .b-hot { background: var(--red-bg); color: #d92d20; }
+    .b-warm { background: var(--amber-bg); color: #b54708; }
+    .b-cool { background: var(--blue-bg); color: #1849a9; }
+    .b-low { background: #f1f2f6; color: #667085; }
+    .b-ai { background: var(--brand-50); color: var(--brand-700); }
+    .b-human { background: #e7f8ef; color: #027a48; }
+    .b-lang { background: #f1f2f6; color: #475467; }
+
+    .chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 8px; font-size: 12.5px; font-weight: 600; background: var(--line-2); color: var(--ink-2); }
+    .chip svg { width: 14px; height: 14px; }
+
+    /* table */
+    table { width: 100%; border-collapse: collapse; }
+    thead th { text-align: left; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; padding: 0 16px 11px; border-bottom: 1px solid var(--line); }
+    tbody td { padding: 14px 16px; border-bottom: 1px solid var(--line-2); font-size: 13.5px; vertical-align: middle; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: #fafbfe; }
+    .cust { display: flex; align-items: center; gap: 11px; }
+    .cust .av { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 13px; flex: 0 0 auto; }
+    .cust .nm { font-weight: 600; }
+    .cust .sub { font-size: 12px; color: var(--muted); }
+    .score-pill { display: inline-flex; align-items: center; gap: 8px; }
+    .score-bar { width: 56px; height: 6px; border-radius: 20px; background: var(--line-2); overflow: hidden; }
+    .score-bar > i { display: block; height: 100%; border-radius: 20px; }
+    .score-num { font-weight: 800; font-size: 13.5px; width: 26px; }
+
+    /* ---------- Inbox ---------- */
+    .inbox { display: grid; grid-template-columns: 332px 1fr 312px; height: calc(100vh - 64px - 52px); border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; background: #fff; box-shadow: var(--sh-sm); }
+    .inbox-col { display: flex; flex-direction: column; min-height: 0; }
+    .ic-list { border-right: 1px solid var(--line); }
+    .ic-detail { background: #fbfbfd; }
+    .ic-panel { border-left: 1px solid var(--line); }
+
+    .ic-head { padding: 14px 16px; border-bottom: 1px solid var(--line); }
+    .ic-head .t { font-weight: 700; font-size: 15px; }
+    .ic-tabs { display: flex; gap: 6px; margin-top: 12px; }
+    .ic-tab { font-size: 12.5px; font-weight: 600; color: var(--muted); padding: 5px 11px; border-radius: 8px; }
+    .ic-tab.active { background: var(--brand-50); color: var(--brand-700); }
+    .ic-tab .c { opacity: .7; }
+
+    .conv-list { overflow-y: auto; flex: 1; }
+    .conv {
+      display: grid; grid-template-columns: 44px 1fr auto; gap: 11px; padding: 13px 16px;
+      border-bottom: 1px solid var(--line-2); cursor: pointer; transition: background .12s; align-items: start;
+    }
+    .conv:hover { background: #fafbfe; }
+    .conv.active { background: var(--brand-50); }
+    .conv.active::before { content:""; position:absolute; }
+    .conv-av { position: relative; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 15px; }
+    .conv-ch { position: absolute; right: -3px; bottom: -3px; width: 19px; height: 19px; border-radius: 6px; display: grid; place-items: center; font-size: 9px; font-weight: 800; border: 2px solid #fff; }
+    .conv-mid { min-width: 0; }
+    .conv-name { font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+    .conv-prev { color: var(--muted); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; }
+    .conv-tags { display: flex; gap: 5px; margin-top: 7px; flex-wrap: wrap; }
+    .conv-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 7px; }
+    .conv-time { font-size: 11.5px; color: var(--muted-2); }
+    .unread { background: var(--brand); color: #fff; font-size: 11px; font-weight: 700; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 20px; display: grid; place-items: center; }
+
+    /* chat detail */
+    .chat-head { padding: 13px 18px; border-bottom: 1px solid var(--line); background: #fff; display: flex; align-items: center; gap: 12px; }
+    .chat-head .meta { flex: 1; }
+    .chat-head .nm { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+    .chat-head .sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+    .chat-tools { display: flex; align-items: center; gap: 8px; }
+    .toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
+    .switch { width: 36px; height: 21px; border-radius: 20px; background: #d3d6e0; position: relative; transition: .18s; }
+    .switch.on { background: var(--brand-600); }
+    .switch::after { content: ""; position: absolute; width: 17px; height: 17px; border-radius: 50%; background: #fff; top: 2px; left: 2px; transition: .18s; box-shadow: var(--sh-sm); }
+    .switch.on::after { left: 17px; }
+
+    .chat-body { flex: 1; overflow-y: auto; padding: 22px 22px 8px; display: flex; flex-direction: column; gap: 16px; }
+    .day-sep { text-align: center; font-size: 11.5px; color: var(--muted-2); font-weight: 600; }
+    .day-sep span { background: var(--line-2); padding: 3px 12px; border-radius: 20px; }
+    .msg { max-width: 74%; }
+    .msg.in { align-self: flex-start; }
+    .msg.out { align-self: flex-end; }
+    .bubble { padding: 11px 14px; border-radius: 16px; font-size: 13.8px; line-height: 1.55; box-shadow: var(--sh-sm); }
+    .msg.in .bubble { background: #fff; border: 1px solid var(--line); border-top-left-radius: 5px; }
+    .msg.out .bubble { background: var(--brand-600); color: #fff; border-top-right-radius: 5px; }
+    .msg.out.staff .bubble { background: #0f766e; }
+    .trans { margin-top: 6px; font-size: 12.5px; color: var(--muted); padding: 8px 12px; background: #fff; border: 1px dashed var(--line); border-radius: 12px; display: flex; gap: 8px; }
+    .msg.out .trans { background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.3); color: #eef0ff; }
+    .trans b { font-weight: 700; flex: 0 0 auto; opacity: .7; }
+    .msg-meta { font-size: 11px; color: var(--muted-2); margin-top: 5px; display: flex; align-items: center; gap: 6px; }
+    .msg.out .msg-meta { justify-content: flex-end; }
+    .ai-tag { display: inline-flex; align-items: center; gap: 3px; color: var(--brand-600); font-weight: 700; }
+    .ai-tag svg { width: 12px; height: 12px; }
+
+    .sys-note { align-self: center; background: var(--amber-bg); color: #b54708; font-size: 12px; font-weight: 600; padding: 6px 13px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; }
+
+    .compose { border-top: 1px solid var(--line); background: #fff; padding: 12px 16px 14px; }
+    .ai-suggest { background: var(--brand-50); border: 1px solid var(--brand-100); border-radius: 12px; padding: 11px 13px; margin-bottom: 10px; }
+    .ai-suggest .lab { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--brand-700); margin-bottom: 6px; }
+    .ai-suggest .lab svg { width: 14px; height: 14px; }
+    .ai-suggest p { font-size: 13px; color: var(--ink-2); line-height: 1.5; }
+    .ai-suggest .row { display: flex; gap: 8px; margin-top: 10px; }
+    .mini-btn { font-size: 12.5px; font-weight: 700; padding: 6px 12px; border-radius: 8px; }
+    .mini-btn.fill { background: var(--brand-600); color: #fff; }
+    .mini-btn.line { background: #fff; color: var(--ink-2); border: 1px solid var(--line); }
+    .compose-box { display: flex; align-items: flex-end; gap: 10px; border: 1px solid var(--line); border-radius: 12px; padding: 9px 11px; }
+    .compose-box:focus-within { border-color: var(--brand-100); }
+    .compose-box textarea { flex: 1; border: none; outline: none; resize: none; font-family: inherit; font-size: 13.8px; max-height: 100px; }
+    .send-btn { width: 38px; height: 38px; border-radius: 10px; background: var(--brand-600); color: #fff; display: grid; place-items: center; flex: 0 0 auto; }
+    .send-btn svg { width: 18px; height: 18px; }
+
+    /* panel */
+    .ic-panel { overflow-y: auto; }
+    .panel-sec { padding: 18px; border-bottom: 1px solid var(--line); }
+    .panel-cust { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 22px; }
+    .panel-av { width: 64px; height: 64px; border-radius: 18px; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 24px; }
+    .panel-name { font-weight: 800; font-size: 17px; margin-top: 11px; }
+    .panel-sub { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+    .panel-quick { display: flex; gap: 8px; margin-top: 14px; }
+    .panel-quick button { flex: 1; }
+
+    .score-ring { display: flex; align-items: center; gap: 16px; }
+    .ring { position: relative; width: 78px; height: 78px; flex: 0 0 auto; }
+    .ring svg { transform: rotate(-90deg); }
+    .ring .val { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 800; font-size: 20px; }
+    .score-desc .lvl { font-weight: 800; font-size: 14px; }
+    .score-desc p { font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.45; }
+
+    .panel-title { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 12px; }
+    .meta-row { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; }
+    .meta-row .k { color: var(--muted); }
+    .meta-row .v { font-weight: 600; }
+    .intent-list { display: flex; flex-direction: column; gap: 12px; }
+    .intent-item { display: flex; gap: 10px; }
+    .intent-dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 5px; flex: 0 0 auto; }
+    .intent-item .tx { font-size: 12.8px; }
+    .intent-item .tm { font-size: 11px; color: var(--muted-2); margin-top: 1px; }
+
+    /* channels grid */
+    .ch-grid { grid-template-columns: repeat(3, 1fr); }
+    .ch-card { padding: 20px; }
+    .ch-card-top { display: flex; align-items: center; gap: 12px; }
+    .ch-card .big-ic { width: 46px; height: 46px; border-radius: 13px; display: grid; place-items: center; font-weight: 800; font-size: 16px; }
+    .ch-card h3 { font-size: 15px; font-weight: 700; }
+    .ch-card .st { font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; margin-top: 2px; font-weight: 600; }
+    .st-on { color: var(--green); }
+    .st-off { color: var(--muted-2); }
+    .st i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+    .ch-stats { display: flex; gap: 18px; margin: 16px 0; }
+    .ch-stats div b { display: block; font-size: 18px; font-weight: 800; }
+    .ch-stats div span { font-size: 11.5px; color: var(--muted); }
+
+    /* settings */
+    .set-grid { grid-template-columns: 1fr 1fr; align-items: start; }
+    .field { margin-bottom: 18px; }
+    .field label { display: block; font-weight: 600; font-size: 13.5px; margin-bottom: 7px; }
+    .field .hint { color: var(--muted); font-size: 12.5px; font-weight: 400; }
+    .field input[type=text], .field textarea, .field select {
+      width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-family: inherit; font-size: 13.5px; outline: none; background: #fff;
+    }
+    .field textarea { resize: vertical; min-height: 84px; line-height: 1.55; }
+    .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--brand-100); }
+    .lang-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+    .lang-chip { padding: 8px 13px; border-radius: 10px; border: 1px solid var(--line); font-size: 13px; font-weight: 600; color: var(--muted); }
+    .lang-chip.on { border-color: var(--brand); background: var(--brand-50); color: var(--brand-700); }
+    .switch-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--line-2); }
+    .switch-row:last-child { border-bottom: none; }
+    .switch-row .tx b { display: block; font-size: 13.8px; font-weight: 600; }
+    .switch-row .tx span { font-size: 12.5px; color: var(--muted); }
+
+    .kb-item { display: flex; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--line-2); }
+    .kb-item:last-child { border-bottom: none; }
+    .kb-ic { width: 36px; height: 36px; border-radius: 10px; background: var(--brand-50); color: var(--brand-600); display: grid; place-items: center; flex: 0 0 auto; }
+    .kb-ic svg { width: 18px; height: 18px; }
+    .kb-item .nm { font-weight: 600; font-size: 13.5px; }
+    .kb-item .mt { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    .toast { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: #fff; padding: 12px 20px; border-radius: 12px; font-size: 13.5px; font-weight: 600; box-shadow: var(--sh-lg); opacity: 0; pointer-events: none; transition: .3s; z-index: 100; display: flex; align-items: center; gap: 9px; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast svg { width: 17px; height: 17px; color: #4ade80; }
+
+    .mobile-note { display: none; }
+
+    @media (max-width: 1180px) {
+      .inbox { grid-template-columns: 300px 1fr; }
+      .ic-panel { display: none; }
+    }
+    @media (max-width: 980px) {
+      .kpis { grid-template-columns: repeat(2, 1fr); }
+      .section-grid, .set-grid { grid-template-columns: 1fr; }
+      .ch-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 820px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .inbox { grid-template-columns: 1fr; height: auto; }
+      .ic-list { display: none; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <!-- ===================== SIDEBAR ===================== -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">O</div>
+        <div>
+          <div class="brand-name">OmniTalk</div>
+          <div class="brand-sub">AI 멀티채널 상담 자동화</div>
+        </div>
+      </div>
+
+      <nav class="nav-group">
+        <div class="nav-label">메인</div>
+        <a class="nav-item active" data-view="dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+          대시보드
+        </a>
+        <a class="nav-item" data-view="inbox">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></svg>
+          통합 인박스
+          <span class="nav-badge">12</span>
+        </a>
+        <a class="nav-item" data-view="leads">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13 2 3 14h8l-1 8 10-12h-8z"/></svg>
+          리드 관리
+          <span class="nav-badge" style="background:var(--red)">5</span>
+        </a>
+      </nav>
+
+      <nav class="nav-group">
+        <div class="nav-label">설정</div>
+        <a class="nav-item" data-view="channels">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="2.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M5 7.5 9.8 10.5M5 16.5 9.8 13.5M19 7.5 14.2 10.5M19 16.5 14.2 13.5"/><circle cx="5" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="19" cy="18" r="2"/></svg>
+          채널 연동
+        </a>
+        <a class="nav-item" data-view="ai">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3a4 4 0 0 0-4 4v1a3 3 0 0 0 0 6v1a4 4 0 0 0 8 0v-1a3 3 0 0 0 0-6V7a4 4 0 0 0-4-4z"/><path stroke-linecap="round" d="M12 3v18"/></svg>
+          AI 설정
+        </a>
+        <a class="nav-item" data-view="analytics">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18"/><path stroke-linecap="round" stroke-linejoin="round" d="m7 14 3-4 3 2 4-6"/></svg>
+          통계 분석
+        </a>
+      </nav>
+
+      <div class="side-foot">
+        <div class="plan-card">
+          <h4>⚡ Pro 플랜 체험 중</h4>
+          <p>남은 기간 12일 · 모든 채널·다국어 AI 무제한</p>
+          <button onclick="toast('영업팀이 곧 연락드릴게요 🙌')">플랜 업그레이드</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===================== MAIN ===================== -->
+    <div class="main">
+      <header class="topbar">
+        <div class="ws">
+          <div class="ws-logo">T</div>
+          <span>트래블메이트</span>
+          <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9 6 6 6-6"/></svg>
+        </div>
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="m20 20-3-3"/></svg>
+          <input placeholder="고객, 대화, 리드 검색…" />
+          <kbd>⌘K</kbd>
+        </div>
+        <div class="top-actions">
+          <button class="icon-btn" onclick="toast('새 알림 3건')"><span class="dot-badge"></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path stroke-linecap="round" stroke-linejoin="round" d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          </button>
+          <button class="icon-btn" onclick="toast('도움말 센터')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .8-1 1.7M12 17h.01"/></svg>
+          </button>
+          <div class="avatar">민</div>
+        </div>
+      </header>
+
+      <div class="content">
+
+        <!-- ============= DASHBOARD ============= -->
+        <section class="view active" id="view-dashboard">
+          <div class="page-head">
+            <div>
+              <h1>대시보드</h1>
+              <p>오늘도 AI가 응대를 자동으로 처리하고 있어요 · 2026년 6월 17일 (수)</p>
+            </div>
+            <div class="ph-actions">
+              <button class="btn btn-ghost" onclick="toast('리포트를 내보냈어요')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                리포트
+              </button>
+              <button class="btn btn-primary" onclick="go('inbox')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.5a8.38 8.38 0 0 1-9.5 8.5 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-4.7A8.38 8.38 0 0 1 4 11.5 8.5 8.5 0 0 1 21 11.5z"/></svg>
+                인박스 열기
+              </button>
+            </div>
+          </div>
+
+          <!-- KPIs -->
+          <div class="grid kpis" style="margin-bottom:16px">
+            <div class="card kpi">
+              <div class="kpi-top">
+                <div class="kpi-ic" style="background:var(--brand-50);color:var(--brand-600)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.5a8.5 8.5 0 0 1-12.3 7.6L3 21l1.9-5.7A8.5 8.5 0 1 1 21 11.5z"/></svg>
+                </div>
+                <span class="kpi-delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m6 15 6-6 6 6"/></svg>18%</span>
+              </div>
+              <div class="kpi-label">오늘 들어온 문의</div>
+              <div class="kpi-value">284</div>
+            </div>
+            <div class="card kpi">
+              <div class="kpi-top">
+                <div class="kpi-ic" style="background:var(--green-bg);color:var(--green)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3a4 4 0 0 0-4 4v1a3 3 0 0 0 0 6v1a4 4 0 0 0 8 0v-1a3 3 0 0 0 0-6V7a4 4 0 0 0-4-4z"/></svg>
+                </div>
+                <span class="kpi-delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m6 15 6-6 6 6"/></svg>4.2%p</span>
+              </div>
+              <div class="kpi-label">AI 자동응답률</div>
+              <div class="kpi-value">87.4%</div>
+            </div>
+            <div class="card kpi">
+              <div class="kpi-top">
+                <div class="kpi-ic" style="background:var(--red-bg);color:var(--red)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 2 3 14h8l-1 8 10-12h-8z"/></svg>
+                </div>
+                <span class="kpi-delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m6 15 6-6 6 6"/></svg>9건</span>
+              </div>
+              <div class="kpi-label">결제 의향 리드</div>
+              <div class="kpi-value">31</div>
+            </div>
+            <div class="card kpi">
+              <div class="kpi-top">
+                <div class="kpi-ic" style="background:var(--blue-bg);color:var(--blue)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2"/></svg>
+                </div>
+                <span class="kpi-delta down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m6 9 6 6 6-6"/></svg>41%</span>
+              </div>
+              <div class="kpi-label">평균 첫 응답 시간</div>
+              <div class="kpi-value">8<span style="font-size:16px;font-weight:700">초</span></div>
+            </div>
+          </div>
+
+          <div class="grid section-grid" style="margin-bottom:16px">
+            <div class="card">
+              <div class="card-head">
+                <div><h3>응대량 추이</h3><div class="sub">최근 14일 · AI 자동응답 vs 상담사 처리</div></div>
+                <a class="card-link" href="#" onclick="go('analytics');return false">자세히 →</a>
+              </div>
+              <div class="card-body">
+                <div style="height:230px;position:relative"><canvas id="trendChart"></canvas></div>
+                <div class="legend">
+                  <span><i style="background:var(--brand)"></i>AI 자동응답</span>
+                  <span><i style="background:#cdd1e0"></i>상담사 처리</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-head"><div><h3>리드 전환 퍼널</h3><div class="sub">오늘 기준</div></div></div>
+              <div class="card-body">
+                <div class="funnel">
+                  <div class="fn"><div class="fn-top"><b>전체 문의</b><span>284명</span></div><div class="fn-track"><div class="fn-fill" style="width:100%;background:#a5b4fc">100%</div></div></div>
+                  <div class="fn"><div class="fn-top"><b>AI 응대 완료</b><span>248명</span></div><div class="fn-track"><div class="fn-fill" style="width:87%;background:#818cf8">87%</div></div></div>
+                  <div class="fn"><div class="fn-top"><b>관심·검토 고객</b><span>96명</span></div><div class="fn-track"><div class="fn-fill" style="width:34%;background:var(--brand)">34%</div></div></div>
+                  <div class="fn"><div class="fn-top"><b>결제 의향 리드</b><span>31명</span></div><div class="fn-track"><div class="fn-fill" style="width:18%;background:var(--brand-700)">11%</div></div></div>
+                  <div class="fn"><div class="fn-top"><b>결제 전환</b><span>14건</span></div><div class="fn-track"><div class="fn-fill" style="width:11%;background:#12b76a">5%</div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid section-grid">
+            <div class="card">
+              <div class="card-head"><div><h3>실시간 핫 리드</h3><div class="sub">AI가 결제 의향이 높다고 판단한 고객</div></div><a class="card-link" href="#" onclick="go('leads');return false">전체 →</a></div>
+              <div class="card-body" style="padding-top:4px">
+                <table>
+                  <tbody id="hotLeadRows"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-head"><div><h3>채널별 유입</h3><div class="sub">오늘 들어온 문의</div></div></div>
+              <div class="card-body" id="channelRows"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============= INBOX ============= -->
+        <section class="view" id="view-inbox">
+          <div class="page-head" style="margin-bottom:14px">
+            <div>
+              <h1>통합 인박스</h1>
+              <p>모든 채널의 대화를 한 곳에서 · AI가 실시간으로 응대 중</p>
+            </div>
+          </div>
+
+          <div class="inbox">
+            <!-- list -->
+            <div class="inbox-col ic-list">
+              <div class="ic-head">
+                <div class="t">대화 <span style="color:var(--muted);font-weight:500">(전체 채널)</span></div>
+                <div class="ic-tabs">
+                  <div class="ic-tab active">전체 <span class="c">12</span></div>
+                  <div class="ic-tab">AI 응대중 <span class="c">8</span></div>
+                  <div class="ic-tab">상담사 <span class="c">3</span></div>
+                </div>
+              </div>
+              <div class="conv-list" id="convList"></div>
+            </div>
+
+            <!-- detail -->
+            <div class="inbox-col ic-detail" id="chatDetail"></div>
+
+            <!-- panel -->
+            <div class="inbox-col ic-panel" id="custPanel"></div>
+          </div>
+        </section>
+
+        <!-- ============= LEADS ============= -->
+        <section class="view" id="view-leads">
+          <div class="page-head">
+            <div>
+              <h1>리드 관리</h1>
+              <p>AI가 대화를 분석해 결제 의향 점수를 매긴 고객들이에요. 점수가 높은 순으로 정리했어요.</p>
+            </div>
+            <div class="ph-actions">
+              <button class="btn btn-ghost" onclick="toast('필터를 적용했어요')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5h18l-7 8v6l-4-2v-4z"/></svg>
+                필터
+              </button>
+              <button class="btn btn-primary" onclick="toast('리드 목록을 CSV로 내보냈어요')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                내보내기
+              </button>
+            </div>
+          </div>
+
+          <div class="grid kpis" style="margin-bottom:16px">
+            <div class="card kpi"><div class="kpi-label" style="margin-top:0">결제 임박 (80점+)</div><div class="kpi-value" style="color:#d92d20">9</div></div>
+            <div class="card kpi"><div class="kpi-label" style="margin-top:0">관심 고객 (60–79점)</div><div class="kpi-value" style="color:#b54708">22</div></div>
+            <div class="card kpi"><div class="kpi-label" style="margin-top:0">검토 중 (40–59점)</div><div class="kpi-value" style="color:var(--blue)">38</div></div>
+            <div class="card kpi"><div class="kpi-label" style="margin-top:0">예상 매출 (이번 주)</div><div class="kpi-value">₩4.7천만</div></div>
+          </div>
+
+          <div class="card">
+            <div class="card-body" style="padding:8px 8px 14px">
+              <table>
+                <thead>
+                  <tr><th>고객</th><th>채널</th><th>관심 상품</th><th>결제 의향</th><th>마지막 활동</th><th>상태</th><th></th></tr>
+                </thead>
+                <tbody id="leadRows"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============= CHANNELS ============= -->
+        <section class="view" id="view-channels">
+          <div class="page-head">
+            <div>
+              <h1>채널 연동</h1>
+              <p>흩어진 모든 상담 채널을 OmniTalk 하나로 모았어요. 클릭 한 번으로 연동·해제할 수 있어요.</p>
+            </div>
+            <div class="ph-actions">
+              <button class="btn btn-primary" onclick="toast('채널 추가 마법사를 열었어요')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
+                채널 추가
+              </button>
+            </div>
+          </div>
+          <div class="grid ch-grid" id="channelCards"></div>
+        </section>
+
+        <!-- ============= AI SETTINGS ============= -->
+        <section class="view" id="view-ai">
+          <div class="page-head">
+            <div>
+              <h1>AI 설정</h1>
+              <p>우리 비즈니스의 말투·언어·응대 규칙을 AI에게 가르쳐 주세요. 저장하면 모든 채널에 즉시 반영돼요.</p>
+            </div>
+            <div class="ph-actions">
+              <button class="btn btn-primary" onclick="toast('AI 설정을 저장했어요 · 전 채널 반영 완료')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 7"/></svg>
+                저장
+              </button>
+            </div>
+          </div>
+
+          <div class="grid set-grid">
+            <div>
+              <div class="card" style="margin-bottom:16px">
+                <div class="card-head"><div><h3>AI 페르소나</h3><div class="sub">고객에게 보이는 챗봇의 성격</div></div></div>
+                <div class="card-body">
+                  <div class="field">
+                    <label>봇 이름</label>
+                    <input type="text" value="트래블메이트 AI 매니저" />
+                  </div>
+                  <div class="field">
+                    <label>말투 & 응대 가이드 <span class="hint">— AI가 따라야 할 톤</span></label>
+                    <textarea>밝고 친절한 여행 플래너 톤으로 응대해 주세요. 항상 고객을 '고객님'이라 부르고, 이모지를 적절히 사용합니다. 가격·일정 문의에는 먼저 출발일과 인원을 확인하고, 확정되지 않은 정보는 단정하지 않습니다. 결제 의향이 보이면 자연스럽게 예약 절차를 안내하되 부담을 주지 않습니다.</textarea>
+                  </div>
+                  <div class="field">
+                    <label>응대 언어 <span class="hint">— 들어온 언어로 자동 감지·번역</span></label>
+                    <div class="lang-chips">
+                      <span class="lang-chip on">🇰🇷 한국어</span>
+                      <span class="lang-chip on">🇺🇸 English</span>
+                      <span class="lang-chip on">🇵🇭 Tagalog</span>
+                      <span class="lang-chip on">🇻🇳 Tiếng Việt</span>
+                      <span class="lang-chip">🇨🇳 中文</span>
+                      <span class="lang-chip">＋ 추가</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-head"><div><h3>응대 규칙</h3><div class="sub">언제 AI가 응대하고, 언제 사람에게 넘길지</div></div></div>
+                <div class="card-body" style="padding-top:6px">
+                  <div class="switch-row"><div class="tx"><b>24시간 자동 응대</b><span>영업시간 외에도 AI가 1차 응대</span></div><div class="switch on" onclick="this.classList.toggle('on')"></div></div>
+                  <div class="switch-row"><div class="tx"><b>결제 의향 고객 자동 이관</b><span>80점 이상이면 담당 상담사에게 알림</span></div><div class="switch on" onclick="this.classList.toggle('on')"></div></div>
+                  <div class="switch-row"><div class="tx"><b>다국어 자동 번역</b><span>외국어 문의를 양방향으로 실시간 번역</span></div><div class="switch on" onclick="this.classList.toggle('on')"></div></div>
+                  <div class="switch-row"><div class="tx"><b>민감 문의 사람 연결</b><span>환불·컴플레인은 즉시 상담사로 전환</span></div><div class="switch on" onclick="this.classList.toggle('on')"></div></div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div class="card" style="margin-bottom:16px">
+                <div class="card-head"><div><h3>AI 모델</h3><div class="sub">응대 품질 / 속도 설정</div></div></div>
+                <div class="card-body">
+                  <div class="field">
+                    <label>기본 모델</label>
+                    <select><option>OmniTalk Pro (정확도 우선)</option><option>OmniTalk Fast (속도 우선)</option><option>OmniTalk Balanced</option></select>
+                  </div>
+                  <div class="field">
+                    <label>응답 지연 <span class="hint">— 너무 빠르면 부자연스러워요</span></label>
+                    <select><option>자연스럽게 (2–6초)</option><option>즉시 응답</option><option>여유있게 (5–12초)</option></select>
+                  </div>
+                  <div class="field" style="margin-bottom:0">
+                    <label>최대 응답 길이</label>
+                    <select><option>보통 (3–4문장)</option><option>간결 (1–2문장)</option><option>상세 (제한 없음)</option></select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-head"><div><h3>지식 베이스</h3><div class="sub">AI가 답변에 참고하는 자료</div></div><a class="card-link" href="#" onclick="toast('자료를 추가했어요');return false">＋ 추가</a></div>
+                <div class="card-body" style="padding-top:6px">
+                  <div class="kb-item">
+                    <div class="kb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>
+                    <div style="flex:1"><div class="nm">상품 카탈로그 2026.pdf</div><div class="mt">패키지·가격·일정 · 동기화 완료</div></div>
+                    <span class="badge b-human">활성</span>
+                  </div>
+                  <div class="kb-item">
+                    <div class="kb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.5a8.5 8.5 0 1 1-4.9-7.7"/><path d="m9 11 3 3 8-8"/></svg></div>
+                    <div style="flex:1"><div class="nm">자주 묻는 질문 (FAQ)</div><div class="mt">48개 항목 · 환불·예약·결제</div></div>
+                    <span class="badge b-human">활성</span>
+                  </div>
+                  <div class="kb-item">
+                    <div class="kb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg></div>
+                    <div style="flex:1"><div class="nm">홈페이지 자동 크롤링</div><div class="mt">travelmate.co.kr · 매일 갱신</div></div>
+                    <span class="badge b-human">활성</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============= ANALYTICS ============= -->
+        <section class="view" id="view-analytics">
+          <div class="page-head">
+            <div>
+              <h1>통계 분석</h1>
+              <p>채널·언어·시간대별 응대 성과를 한눈에 확인하세요.</p>
+            </div>
+            <div class="ph-actions">
+              <button class="btn btn-ghost" onclick="toast('기간을 변경했어요')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path stroke-linecap="round" d="M3 9h18M8 2v4M16 2v4"/></svg>
+                최근 30일
+              </button>
+            </div>
+          </div>
+
+          <div class="grid section-grid" style="margin-bottom:16px">
+            <div class="card">
+              <div class="card-head"><div><h3>채널별 문의·전환</h3><div class="sub">유입 대비 결제 전환</div></div></div>
+              <div class="card-body"><div style="height:260px;position:relative"><canvas id="channelBarChart"></canvas></div></div>
+            </div>
+            <div class="card">
+              <div class="card-head"><div><h3>언어 분포</h3><div class="sub">다국어 응대 비중</div></div></div>
+              <div class="card-body"><div style="height:240px;position:relative"><canvas id="langChart"></canvas></div></div>
+            </div>
+          </div>
+
+          <div class="grid section-grid">
+            <div class="card">
+              <div class="card-head"><div><h3>시간대별 문의량</h3><div class="sub">AI 덕분에 새벽 문의도 놓치지 않아요</div></div></div>
+              <div class="card-body"><div style="height:230px;position:relative"><canvas id="hourChart"></canvas></div></div>
+            </div>
+            <div class="card">
+              <div class="card-head"><div><h3>핵심 지표</h3><div class="sub">최근 30일</div></div></div>
+              <div class="card-body" style="padding-top:8px">
+                <div class="meta-row"><span class="k">총 처리 문의</span><span class="v">7,842건</span></div>
+                <div class="meta-row"><span class="k">AI 단독 해결률</span><span class="v" style="color:var(--green)">87.4%</span></div>
+                <div class="meta-row"><span class="k">평균 첫 응답</span><span class="v">8초</span></div>
+                <div class="meta-row"><span class="k">결제 전환 리드</span><span class="v">412명</span></div>
+                <div class="meta-row"><span class="k">예상 절감 인건비</span><span class="v" style="color:var(--brand-600)">월 ₩680만</span></div>
+                <div class="meta-row"><span class="k">고객 만족도(CSAT)</span><span class="v">4.7 / 5.0</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 7"/></svg><span id="toastMsg"></span></div>
+
+  <script>
+    /* ============ Channel meta ============ */
+    const CH = {
+      kakao:   { label: '카카오톡', short: 'K', bg: '#fee500', fg: '#3a1d1d' },
+      naver:   { label: '네이버 톡톡', short: 'N', bg: '#03c75a', fg: '#fff' },
+      store:   { label: '스마트스토어', short: 'S', bg: '#03c75a', fg: '#fff' },
+      zalo:    { label: '잘로 (Zalo)', short: 'Z', bg: '#0068ff', fg: '#fff' },
+      insta:   { label: '인스타그램', short: 'I', bg: 'linear-gradient(135deg,#f9ce34,#ee2a7b,#6228d7)', fg: '#fff' },
+    };
+    const AVA = ['#6366f1','#0ea5e9','#f59e0b','#ec4899','#10b981','#8b5cf6','#ef4444','#14b8a6'];
+    const av = i => AVA[i % AVA.length];
+    function scoreClass(s){ return s>=80?'b-hot':s>=60?'b-warm':s>=40?'b-cool':'b-low'; }
+    function scoreLabel(s){ return s>=80?'결제 임박':s>=60?'관심 고객':s>=40?'검토 중':'단순 문의'; }
+    function scoreColor(s){ return s>=80?'#f04438':s>=60?'#f79009':s>=40?'#2e90fa':'#98a2b3'; }
+
+    /* ============ Conversations ============ */
+    const CONVS = [
+      {
+        id:'c1', name:'김지현', ch:'kakao', lang:'한국어', score:92, unread:2, time:'방금', ai:true,
+        product:'보라카이 4박5일 패키지', tag:'예약·결제 단계',
+        last:'호텔 업그레이드도 가능한가요? 오늘 결제할게요',
+        intents:[
+          {c:'#f04438', tx:'"오늘 결제할게요" — 강한 구매 의사', tm:'방금'},
+          {c:'#f79009', tx:'호텔 업그레이드 옵션 문의', tm:'1분 전'},
+          {c:'#2e90fa', tx:'7월 중순 2인 가격 확인', tm:'5분 전'},
+        ],
+        msgs:[
+          {s:'in', t:'안녕하세요, 보라카이 패키지 보고 연락드려요 :)', tm:'오후 2:31'},
+          {s:'out', ai:true, t:'안녕하세요 고객님! 트래블메이트입니다 😊 보라카이 4박5일 패키지에 관심 가져주셔서 감사해요. 출발 예정일과 인원을 알려주시면 딱 맞는 일정으로 안내해 드릴게요!', tm:'오후 2:31'},
+          {s:'in', t:'7월 중순쯤 2명이요. 가격이 어떻게 되나요?', tm:'오후 2:33'},
+          {s:'out', ai:true, t:'7월 중순 2인 기준이면 1인 89만원부터예요! ✈️ 왕복 항공·4성급 리조트·조식·시내 픽업이 모두 포함된 가격이고요. 원하시면 선셋 요트나 호핑투어도 추가하실 수 있어요. 더 자세한 일정표 보내드릴까요?', tm:'오후 2:33'},
+          {s:'in', t:'호텔 업그레이드도 가능한가요? 오늘 결제할게요', tm:'오후 2:35'},
+        ],
+        suggest:'네 고객님! 5성급 리조트로 업그레이드하시면 1인 +15만원이에요 🌴 오늘 예약하시면 선셋 요트 투어(2인 12만원 상당)를 무료로 넣어드릴게요. 바로 예약 링크 보내드릴까요?'
+      },
+      {
+        id:'c2', name:'Juan Dela Cruz', ch:'zalo', lang:'Tagalog', score:78, unread:1, time:'3분', ai:true,
+        product:'세부 5일 자유여행', tag:'다국어 응대',
+        last:'Magkano po para sa 2 pax?',
+        intents:[
+          {c:'#f79009', tx:'2인 가격 적극 문의', tm:'3분 전'},
+          {c:'#2e90fa', tx:'세부 패키지 일정 확인', tm:'8분 전'},
+        ],
+        msgs:[
+          {s:'in', t:'Hello po, interested ako sa Cebu package.', tr:'안녕하세요, 세부 패키지에 관심 있어요.', tm:'오후 2:18'},
+          {s:'out', ai:true, t:'Hello po! Salamat sa interes. Kailan po ang balak ninyong petsa at ilan po kayo?', tr:'안녕하세요! 관심 가져주셔서 감사해요. 출발 예정일과 인원이 어떻게 되시나요?', tm:'오후 2:18'},
+          {s:'in', t:'Magkano po para sa 2 pax?', tr:'2인은 얼마인가요?', tm:'오후 2:21'},
+        ],
+        suggest:'세부 5일 자유여행은 2인 기준 1인 ₱32,000부터예요. 항공·호텔·공항 픽업 포함이고, 원하시면 호핑투어를 추가할 수 있어요. (타갈로그로 자동 번역되어 발송됩니다)'
+      },
+      {
+        id:'c3', name:'박서연', ch:'naver', lang:'한국어', score:64, unread:0, time:'12분', ai:true,
+        product:'다낭 가족여행 (4인)', tag:'',
+        last:'아이 동반인데 유아 요금은 어떻게 되나요?',
+        intents:[
+          {c:'#f79009', tx:'4인 가족 패키지 검토', tm:'12분 전'},
+          {c:'#2e90fa', tx:'유아 요금 문의', tm:'12분 전'},
+        ],
+        msgs:[
+          {s:'in', t:'다낭 가족여행 알아보고 있어요. 4명이고 그중 한 명은 5살이에요.', tm:'오후 2:09'},
+          {s:'out', ai:true, t:'안녕하세요 고객님! 다낭은 가족여행으로 정말 인기 많은 곳이에요 👨‍👩‍👧 만 5세는 유아 요금이 적용돼서 성인의 약 70% 수준이에요. 출발 희망일을 알려주시면 정확한 견적 도와드릴게요!', tm:'오후 2:10'},
+          {s:'in', t:'아이 동반인데 유아 요금은 어떻게 되나요?', tm:'오후 2:11'},
+        ],
+        suggest:'만 5세 유아는 좌석·조식 포함 1인 62만원이에요. 가족실(4인 1실)도 가능하고요. 8월 초·중순 중 어느 쪽을 보고 계세요?'
+      },
+      {
+        id:'c4', name:'이수진', ch:'store', lang:'한국어', score:88, unread:0, time:'25분', staff:true,
+        product:'팔라완 허니문 패키지', tag:'상담사 이관됨',
+        last:'(담당 상담사 김민지에게 이관됨)',
+        intents:[
+          {c:'#f04438', tx:'허니문 견적 요청 — 결제 임박', tm:'25분 전'},
+          {c:'#f79009', tx:'프라이빗 풀빌라 옵션 관심', tm:'30분 전'},
+        ],
+        msgs:[
+          {s:'in', t:'신혼여행으로 팔라완 알아보는데 풀빌라로 견적 받아볼 수 있을까요?', tm:'오후 1:52'},
+          {s:'out', ai:true, t:'축하드려요 고객님! 💍 팔라완 허니문은 프라이빗 풀빌라가 정말 인기예요. 날짜와 예산대를 알려주시면 맞춤 견적 잡아드릴게요!', tm:'오후 1:53'},
+          {s:'in', t:'9월 셋째 주, 5박이요. 예산은 1인 200만원 정도 생각해요.', tm:'오후 1:55'},
+          {s:'sys', t:'결제 의향 88점 — 담당 상담사 김민지에게 자동 이관되었습니다', tm:'오후 1:55'},
+          {s:'out', staff:true, t:'고객님 안녕하세요, 허니문 담당 김민지입니다 😊 말씀해주신 조건으로 풀빌라 3개 옵션 준비해서 보내드릴게요!', tm:'오후 1:57'},
+        ],
+        suggest:'(상담사 김민지님이 응대 중입니다)'
+      },
+      {
+        id:'c5', name:'Maria Santos', ch:'insta', lang:'English', score:58, unread:1, time:'40분', ai:true,
+        product:'보라카이 호핑투어', tag:'다국어 응대',
+        last:'Is the island hopping included?',
+        intents:[
+          {c:'#2e90fa', tx:'호핑투어 포함 여부 확인', tm:'40분 전'},
+        ],
+        msgs:[
+          {s:'in', t:'Hi! Saw your Boracay package on Instagram. Is the island hopping included?', tr:'안녕하세요! 인스타에서 보라카이 패키지 봤어요. 호핑투어도 포함인가요?', tm:'오후 1:37'},
+          {s:'out', ai:true, t:'Hi there! 🏝️ The standard package includes airport transfer and breakfast. Island hopping is an optional add-on at $35 per person. Would you like me to include it in your quote?', tr:'안녕하세요! 기본 패키지엔 공항 픽업과 조식이 포함돼요. 호핑투어는 1인 $35 옵션으로 추가할 수 있어요. 견적에 넣어드릴까요?', tm:'오후 1:38'},
+          {s:'in', t:'Is the island hopping included?', tr:'호핑투어가 포함인가요?', tm:'오후 1:39'},
+        ],
+        suggest:'Island hopping is an optional add-on ($35/pax) with lunch and snorkeling gear included. Shall I add it for 2 guests? (영어로 자동 번역되어 발송됩니다)'
+      },
+      {
+        id:'c6', name:'정민호', ch:'kakao', lang:'한국어', score:28, unread:0, time:'1시간', ai:true,
+        product:'환불 규정 문의', tag:'',
+        last:'예약 취소하면 환불 얼마나 되나요?',
+        intents:[
+          {c:'#98a2b3', tx:'환불 규정 단순 문의', tm:'1시간 전'},
+        ],
+        msgs:[
+          {s:'in', t:'예약 취소하면 환불 얼마나 되나요?', tm:'오후 1:12'},
+          {s:'out', ai:true, t:'안내해 드릴게요 고객님. 출발 30일 전까지는 전액, 15~29일 전 70%, 7~14일 전 50%가 환불돼요. 예약번호 알려주시면 정확히 확인해 드릴게요!', tm:'오후 1:12'},
+        ],
+        suggest:'예약번호를 알려주시면 환불 가능 금액을 정확히 계산해 드릴게요. 혹시 일정 변경으로도 도움드릴 수 있어요!'
+      },
+    ];
+
+    /* ============ Render: conversation list ============ */
+    function renderConvList(){
+      const el = document.getElementById('convList');
+      el.innerHTML = CONVS.map((c,i)=>{
+        const ch = CH[c.ch];
+        const tags = [];
+        tags.push(`<span class="badge ${scoreClass(c.score)}">${scoreLabel(c.score)} ${c.score}</span>`);
+        if(c.staff) tags.push('<span class="badge b-human">상담사</span>');
+        else if(c.ai) tags.push('<span class="badge b-ai">AI 응대중</span>');
+        if(c.lang!=='한국어') tags.push(`<span class="badge b-lang">🌐 ${c.lang}</span>`);
+        return `<div class="conv ${i===0?'active':''}" data-id="${c.id}" onclick="selectConv('${c.id}')" style="position:relative">
+          <div class="conv-av" style="background:${av(i)}">${c.name[0]}
+            <span class="conv-ch" style="background:${ch.bg};color:${ch.fg}">${ch.short}</span>
+          </div>
+          <div class="conv-mid">
+            <div class="conv-name">${c.name}</div>
+            <div class="conv-prev">${c.last}</div>
+            <div class="conv-tags">${tags.join('')}</div>
+          </div>
+          <div class="conv-right">
+            <span class="conv-time">${c.time}</span>
+            ${c.unread?`<span class="unread">${c.unread}</span>`:''}
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    /* ============ Render: chat detail ============ */
+    let showTrans = true;
+    function selectConv(id){
+      document.querySelectorAll('.conv').forEach(x=>x.classList.toggle('active', x.dataset.id===id));
+      const c = CONVS.find(x=>x.id===id);
+      renderChat(c);
+      renderPanel(c);
+    }
+    function renderChat(c){
+      const ch = CH[c.ch];
+      const msgs = c.msgs.map(m=>{
+        if(m.s==='sys') return `<div class="sys-note"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2 2 7l10 5 10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>${m.t}</div>`;
+        const out = m.s==='out';
+        const trans = m.tr ? `<div class="trans"><b>번역</b><span>${m.tr}</span></div>` : '';
+        const meta = out
+          ? `<div class="msg-meta">${m.ai?'<span class="ai-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3a4 4 0 0 0-4 4v1a3 3 0 0 0 0 6v1a4 4 0 0 0 8 0v-1a3 3 0 0 0 0-6V7a4 4 0 0 0-4-4z"/></svg>AI 자동응답</span> · ':m.staff?'<span style="color:#0f766e;font-weight:700">상담사 김민지</span> · ':''}${m.tm} · 읽음</div>`
+          : `<div class="msg-meta">${m.tm}</div>`;
+        return `<div class="msg ${out?'out':'in'} ${m.staff?'staff':''}">
+          <div class="bubble">${m.t}${showTrans?trans:''}</div>
+          ${meta}
+        </div>`;
+      }).join('');
+
+      const compose = c.staff
+        ? `<div class="ai-suggest" style="background:#f0fdfa;border-color:#99f6e4"><div class="lab" style="color:#0f766e"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 6 9 17l-5-5"/></svg>상담사 응대 모드</div><p>${c.suggest}</p></div>`
+        : `<div class="ai-suggest">
+            <div class="lab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.5 3 11 7l4 1.5L11 10l-1.5 4L8 10l-4-1.5L8 7zM18 13l.9 2.3L21 16l-2.1.7L18 19l-.9-2.3L15 16l2.1-.7z"/></svg>AI 추천 답변</div>
+            <p>${c.suggest}</p>
+            <div class="row">
+              <button class="mini-btn fill" onclick="toast('AI 추천 답변을 전송했어요')">전송</button>
+              <button class="mini-btn line" onclick="toast('수정 모드로 전환했어요')">수정 후 전송</button>
+              <button class="mini-btn line" onclick="toast('다른 답변을 생성했어요')">다시 생성</button>
+            </div>
+          </div>`;
+
+      document.getElementById('chatDetail').innerHTML = `
+        <div class="chat-head">
+          <div class="conv-av" style="width:40px;height:40px;border-radius:11px;background:${av(CONVS.indexOf(c))}">${c.name[0]}
+            <span class="conv-ch" style="background:${ch.bg};color:${ch.fg}">${ch.short}</span>
+          </div>
+          <div class="meta">
+            <div class="nm">${c.name} ${c.lang!=='한국어'?`<span class="badge b-lang">🌐 ${c.lang}</span>`:''}</div>
+            <div class="sub">${ch.label} · ${c.product}</div>
+          </div>
+          <div class="chat-tools">
+            <label class="toggle" onclick="toggleTrans()"><span>번역</span><span class="switch ${showTrans?'on':''}" id="transSwitch"></span></label>
+          </div>
+        </div>
+        <div class="chat-body" id="chatBody">
+          <div class="day-sep"><span>오늘</span></div>
+          ${msgs}
+        </div>
+        <div class="compose">
+          ${compose}
+          <div class="compose-box">
+            <textarea rows="1" placeholder="메시지를 입력하거나 AI 추천을 사용하세요…"></textarea>
+            <button class="send-btn" onclick="toast('메시지를 전송했어요')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m22 2-7 20-4-9-9-4z"/></svg></button>
+          </div>
+        </div>`;
+      const body = document.getElementById('chatBody'); body.scrollTop = body.scrollHeight;
+    }
+    function toggleTrans(){ showTrans=!showTrans; const c=CONVS.find(x=>document.querySelector('.conv.active').dataset.id===x.id); renderChat(c); }
+
+    /* ============ Render: customer panel ============ */
+    function renderPanel(c){
+      const ch = CH[c.ch];
+      const i = CONVS.indexOf(c);
+      const col = scoreColor(c.score);
+      const circ = 2*Math.PI*34;
+      const off = circ*(1-c.score/100);
+      const intents = c.intents.map(it=>`<div class="intent-item"><span class="intent-dot" style="background:${it.c}"></span><div><div class="tx">${it.tx}</div><div class="tm">${it.tm}</div></div></div>`).join('');
+      document.getElementById('custPanel').innerHTML = `
+        <div class="panel-sec panel-cust">
+          <div class="panel-av" style="background:${av(i)}">${c.name[0]}</div>
+          <div class="panel-name">${c.name}</div>
+          <div class="panel-sub">${ch.label} · ${c.lang}</div>
+          <div class="panel-quick">
+            <button class="btn btn-ghost" style="flex:1;justify-content:center;padding:8px" onclick="toast('고객 프로필을 열었어요')">프로필</button>
+            <button class="btn btn-primary" style="flex:1;justify-content:center;padding:8px" onclick="toast('담당 상담사에게 이관했어요')">상담사 이관</button>
+          </div>
+        </div>
+        <div class="panel-sec">
+          <div class="panel-title">결제 의향 점수</div>
+          <div class="score-ring">
+            <div class="ring">
+              <svg width="78" height="78"><circle cx="39" cy="39" r="34" fill="none" stroke="#eef0f4" stroke-width="8"/><circle cx="39" cy="39" r="34" fill="none" stroke="${col}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${off}"/></svg>
+              <div class="val" style="color:${col}">${c.score}</div>
+            </div>
+            <div class="score-desc">
+              <div class="lvl" style="color:${col}">${scoreLabel(c.score)}</div>
+              <p>AI가 대화 맥락·키워드·반응 속도를 분석해 산출한 실시간 구매 의향이에요.</p>
+            </div>
+          </div>
+        </div>
+        <div class="panel-sec">
+          <div class="panel-title">고객 정보</div>
+          <div class="meta-row"><span class="k">관심 상품</span><span class="v">${c.product}</span></div>
+          <div class="meta-row"><span class="k">유입 채널</span><span class="v">${ch.label}</span></div>
+          <div class="meta-row"><span class="k">사용 언어</span><span class="v">${c.lang}</span></div>
+          <div class="meta-row"><span class="k">응대 상태</span><span class="v">${c.staff?'상담사 응대':'AI 자동응대'}</span></div>
+        </div>
+        <div class="panel-sec" style="border-bottom:none">
+          <div class="panel-title">AI 인텐트 분석</div>
+          <div class="intent-list">${intents}</div>
+        </div>`;
+    }
+
+    /* ============ Dashboard rows ============ */
+    function renderHotLeads(){
+      const hot = CONVS.filter(c=>c.score>=60).sort((a,b)=>b.score-a.score).slice(0,5);
+      document.getElementById('hotLeadRows').innerHTML = hot.map((c,i)=>{
+        const ch=CH[c.ch];
+        return `<tr style="cursor:pointer" onclick="go('inbox');selectConv('${c.id}')">
+          <td><div class="cust"><div class="av" style="background:${av(CONVS.indexOf(c))}">${c.name[0]}</div><div><div class="nm">${c.name}</div><div class="sub">${c.product}</div></div></div></td>
+          <td><span class="chip"><span style="width:16px;height:16px;border-radius:5px;display:inline-grid;place-items:center;font-size:9px;font-weight:800;background:${ch.bg};color:${ch.fg}">${ch.short}</span>${ch.label}</span></td>
+          <td><div class="score-pill"><span class="score-num" style="color:${scoreColor(c.score)}">${c.score}</span><div class="score-bar"><i style="width:${c.score}%;background:${scoreColor(c.score)}"></i></div></div></td>
+          <td style="text-align:right"><span class="badge ${scoreClass(c.score)}">${scoreLabel(c.score)}</span></td>
+        </tr>`;
+      }).join('');
+    }
+    function renderChannelRows(){
+      const data = [
+        {ch:'kakao', n:112, pct:39}, {ch:'store', n:68, pct:24},
+        {ch:'naver', n:51, pct:18}, {ch:'zalo', n:34, pct:12}, {ch:'insta', n:19, pct:7},
+      ];
+      document.getElementById('channelRows').innerHTML = data.map(d=>{
+        const ch=CH[d.ch];
+        return `<div class="chrow">
+          <div class="ch-ic" style="background:${ch.bg};color:${ch.fg}">${ch.short}</div>
+          <div style="flex:0 0 96px"><div class="ch-name">${ch.label}</div><div class="ch-meta">${d.n}건</div></div>
+          <div class="ch-bar"><i style="width:${d.pct*2.4}%;background:${ch.bg.includes('gradient')?'#ee2a7b':ch.bg}"></i></div>
+          <div class="ch-val">${d.pct}%</div>
+        </div>`;
+      }).join('');
+    }
+
+    /* ============ Leads table ============ */
+    function renderLeads(){
+      const extra = [
+        {name:'최예린', ch:'kakao', product:'다낭 프리미엄 4박', score:84, time:'8분 전', staff:false, lang:'한국어'},
+        {name:'Tran Minh', ch:'zalo', product:'나트랑 자유여행', score:81, time:'15분 전', staff:false, lang:'Tiếng Việt'},
+        {name:'강도현', ch:'store', product:'세부 풀빌라 허니문', score:79, time:'22분 전', staff:false, lang:'한국어'},
+        {name:'윤서아', ch:'naver', product:'팔라완 아일랜드투어', score:73, time:'31분 전', staff:false, lang:'한국어'},
+        {name:'David Kim', ch:'insta', product:'보라카이 5박 패키지', score:69, time:'44분 전', staff:false, lang:'English'},
+      ];
+      const rows = [...CONVS.filter(c=>c.score>=55), ...extra].sort((a,b)=>b.score-a.score);
+      document.getElementById('leadRows').innerHTML = rows.map((c,i)=>{
+        const ch=CH[c.ch];
+        const conv = CONVS.find(x=>x.name===c.name);
+        return `<tr style="cursor:pointer" ${conv?`onclick="go('inbox');selectConv('${conv.id}')"`:`onclick="toast('${c.name} 고객 상세를 열었어요')"`}>
+          <td><div class="cust"><div class="av" style="background:${av(i)}">${c.name[0]}</div><div><div class="nm">${c.name}</div><div class="sub">${c.lang}</div></div></div></td>
+          <td><span class="chip"><span style="width:16px;height:16px;border-radius:5px;display:inline-grid;place-items:center;font-size:9px;font-weight:800;background:${ch.bg};color:${ch.fg}">${ch.short}</span>${ch.label}</span></td>
+          <td>${c.product}</td>
+          <td><div class="score-pill"><span class="score-num" style="color:${scoreColor(c.score)}">${c.score}</span><div class="score-bar"><i style="width:${c.score}%;background:${scoreColor(c.score)}"></i></div></div></td>
+          <td style="color:var(--muted)">${c.time}</td>
+          <td><span class="badge ${c.staff?'b-human':scoreClass(c.score)}">${c.staff?'상담사':scoreLabel(c.score)}</span></td>
+          <td style="text-align:right"><button class="mini-btn line" onclick="event.stopPropagation();toast('${c.name} 고객에게 예약 링크를 보냈어요')">예약 유도</button></td>
+        </tr>`;
+      }).join('');
+    }
+
+    /* ============ Channels cards ============ */
+    function renderChannels(){
+      const list = [
+        {ch:'kakao', on:true, today:112, total:'3,204', auto:'89%'},
+        {ch:'store', on:true, today:68, total:'1,942', auto:'84%'},
+        {ch:'naver', on:true, today:51, total:'1,510', auto:'86%'},
+        {ch:'zalo', on:true, today:34, total:'892', auto:'82%'},
+        {ch:'insta', on:true, today:19, total:'604', auto:'80%'},
+        {ch:'wa', on:false, today:0, total:'—', auto:'—'},
+      ];
+      const WA = {label:'WhatsApp', short:'W', bg:'#25d366', fg:'#fff'};
+      document.getElementById('channelCards').innerHTML = list.map(d=>{
+        const ch = d.ch==='wa'?WA:CH[d.ch];
+        return `<div class="card ch-card">
+          <div class="ch-card-top">
+            <div class="big-ic" style="background:${ch.bg};color:${ch.fg}">${ch.short}</div>
+            <div style="flex:1">
+              <h3>${ch.label}</h3>
+              <div class="st ${d.on?'st-on':'st-off'}"><i style="background:${d.on?'var(--green)':'var(--muted-2)'}"></i>${d.on?'연동됨 · 정상':'연동 안 됨'}</div>
+            </div>
+          </div>
+          <div class="ch-stats">
+            <div><b>${d.today}</b><span>오늘 문의</span></div>
+            <div><b>${d.total}</b><span>누적 처리</span></div>
+            <div><b style="color:var(--brand-600)">${d.auto}</b><span>AI 자동률</span></div>
+          </div>
+          <button class="btn ${d.on?'btn-ghost':'btn-primary'}" style="width:100%;justify-content:center" onclick="toast('${ch.label} ${d.on?'설정을 열었어요':'연동을 시작했어요'}')">${d.on?'설정 관리':'＋ 지금 연동'}</button>
+        </div>`;
+      }).join('');
+    }
+
+    /* ============ Charts ============ */
+    let charts = {};
+    Chart.defaults.font.family = "'Pretendard', sans-serif";
+    Chart.defaults.color = '#98a2b3';
+    Chart.defaults.font.size = 11.5;
+
+    function trendChart(){
+      if(charts.trend) return;
+      const ctx = document.getElementById('trendChart'); if(!ctx) return;
+      const labels = Array.from({length:14},(_,i)=>`${i+4}일`);
+      charts.trend = new Chart(ctx,{type:'line',data:{labels,datasets:[
+        {label:'AI 자동응답',data:[180,210,195,240,265,250,288,272,310,295,330,318,348,360],borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,.12)',fill:true,tension:.4,pointRadius:0,borderWidth:2.5},
+        {label:'상담사 처리',data:[42,38,45,40,52,48,44,50,46,55,49,58,52,48],borderColor:'#cdd1e0',backgroundColor:'transparent',fill:false,tension:.4,pointRadius:0,borderWidth:2,borderDash:[5,4]},
+      ]},options:{plugins:{legend:{display:false}},scales:{y:{grid:{color:'#f2f3f8'},border:{display:false},ticks:{stepSize:120}},x:{grid:{display:false},border:{display:false},ticks:{maxTicksLimit:7}}},maintainAspectRatio:false}});
+    }
+    function analyticsCharts(){
+      if(charts.bar) return;
+      const b = document.getElementById('channelBarChart');
+      charts.bar = new Chart(b,{type:'bar',data:{labels:['카카오톡','스마트스토어','네이버톡톡','잘로','인스타'],datasets:[
+        {label:'문의',data:[3204,1942,1510,892,604],backgroundColor:'#c7cbff',borderRadius:6,barThickness:18},
+        {label:'전환',data:[284,176,121,72,41],backgroundColor:'#5145e5',borderRadius:6,barThickness:18},
+      ]},options:{plugins:{legend:{position:'bottom',labels:{boxWidth:10,boxHeight:10,usePointStyle:true,pointStyle:'circle'}}},scales:{y:{grid:{color:'#f2f3f8'},border:{display:false}},x:{grid:{display:false},border:{display:false}}},maintainAspectRatio:false}});
+
+      const l = document.getElementById('langChart');
+      charts.lang = new Chart(l,{type:'doughnut',data:{labels:['한국어','English','Tagalog','Tiếng Việt','기타'],datasets:[{data:[68,14,9,6,3],backgroundColor:['#6366f1','#0ea5e9','#f59e0b','#10b981','#cdd1e0'],borderWidth:0}]},options:{cutout:'66%',plugins:{legend:{position:'right',labels:{boxWidth:9,boxHeight:9,usePointStyle:true,pointStyle:'circle',padding:12}}},maintainAspectRatio:false}});
+
+      const h = document.getElementById('hourChart');
+      charts.hour = new Chart(h,{type:'bar',data:{labels:['0','3','6','9','12','15','18','21'],datasets:[{label:'문의량',data:[58,34,22,140,168,195,210,176],backgroundColor:(c)=>{const v=c.raw;return v>180?'#5145e5':v>100?'#818cf8':'#c7cbff';},borderRadius:6}]},options:{plugins:{legend:{display:false}},scales:{y:{grid:{color:'#f2f3f8'},border:{display:false}},x:{grid:{display:false},border:{display:false},title:{display:true,text:'시 (24h)',color:'#98a2b3'}}},maintainAspectRatio:false}});
+    }
+
+    /* ============ Navigation ============ */
+    const TITLES = {dashboard:'대시보드',inbox:'통합 인박스',leads:'리드 관리',channels:'채널 연동',ai:'AI 설정',analytics:'통계 분석'};
+    function go(view){
+      document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+      document.getElementById('view-'+view).classList.add('active');
+      document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.view===view));
+      document.title = `OmniTalk · ${TITLES[view]||''}`;
+      if(view==='dashboard') trendChart();
+      if(view==='analytics') analyticsCharts();
+      window.scrollTo(0,0);
+    }
+    document.querySelectorAll('.nav-item').forEach(n=>n.addEventListener('click',e=>{e.preventDefault();go(n.dataset.view);}));
+
+    /* ============ Toast ============ */
+    let toastT;
+    function toast(msg){
+      const t=document.getElementById('toast'); document.getElementById('toastMsg').textContent=msg;
+      t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2400);
+    }
+
+    /* ============ Init ============ */
+    renderConvList();
+    selectConv('c1');
+    renderHotLeads();
+    renderChannelRows();
+    renderLeads();
+    renderChannels();
+    trendChart();
+  </script>
+</body>
+
+</html>
